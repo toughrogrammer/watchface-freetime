@@ -16,6 +16,7 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.SurfaceHolder;
 
 public class AnalogWatchFaceService extends CanvasWatchFaceService {
@@ -30,18 +31,6 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         static final int MSG_UPDATE_TIME = 0;
         static final int INTERACTIVE_UPDATE_RATE_MS = 10;
 
-        /* 타임 객체 */
-        Time mTime;
-
-        /* 그래픽 객체 */
-        Bitmap mBackgroundBitmap;
-        Bitmap mBackgroundScaledBitmap;
-        Paint mHourPaint;
-        Paint mMinutePaint;
-        Paint mSecondPaint;
-        Paint _circleOutlinePaint;
-
-        /* Interactive 모드일 때, 1초에 한번 시간을 업데이트 하기 위해 사용하는 핸들러 */
         final Handler mUpdateTimeHandler = new Handler() {
             @Override
             public void handleMessage(Message message) {
@@ -70,6 +59,28 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
 
         /* Timezone 리시버의 등록 여부를 저장하는 변수 */
         boolean mRegisteredTimeZoneReceiver = false;
+
+        Time mTime;
+
+        Bitmap mBackgroundBitmap;
+        Bitmap mBackgroundScaledBitmap;
+        Paint mHourPaint;
+        Paint mMinutePaint;
+        Paint mSecondPaint;
+        Paint _circleOutlinePaint;
+
+        static final float FRIENDS_ORBIT_RADIUS = 30.0f;
+        Bitmap[] _friendsThumbnailBitmaps;
+        float _friendsOrbitAngle[] = new float[]{
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f,
+                0.0f
+        };
+
+        long prev_milliseconds;
+        float dt;
 
 
         @Override
@@ -112,6 +123,12 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             _circleOutlinePaint.setAntiAlias(true);
             _circleOutlinePaint.setStrokeCap(Paint.Cap.ROUND);
             _circleOutlinePaint.setStyle(Paint.Style.STROKE);
+
+            _friendsThumbnailBitmaps = new Bitmap[5];
+            for ( int i = 0; i < _friendsThumbnailBitmaps.length; i++ ) {
+                Drawable drawable = resources.getDrawable(R.drawable.thumbnail_default);
+                _friendsThumbnailBitmaps[i] = ((BitmapDrawable) drawable).getBitmap();
+            }
 
 
             mTime = new Time();
@@ -168,6 +185,11 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
 
             mTime.setToNow();
 
+            long curr = System.currentTimeMillis();
+            long diff = curr - prev_milliseconds;
+            prev_milliseconds = curr;
+            dt = diff * 0.001f;
+
             int width = bounds.width();
             int height = bounds.height();
 
@@ -182,14 +204,26 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             /* 중심 좌표를 구합니다. */
             float centerX = width / 2f;
             float centerY = height / 2f;
+            Log.d("", "" + centerX + " " + centerY);
 
             DrawFriends(canvas, centerX, centerY);
             DrawClock(canvas, centerX, centerY);
         }
 
         void DrawFriends(Canvas canvas, float cx, float cy) {
+            for( int i = 0; i < 5; i++ ) {
+                _friendsOrbitAngle[i] += 0.6f * i;
+            }
+
             for (int i = 0; i < 5; i++) {
-                canvas.drawCircle(cx, cy, 30 * i, _circleOutlinePaint);
+                float radius = FRIENDS_ORBIT_RADIUS * i;
+                canvas.drawCircle(cx, cy, radius, _circleOutlinePaint);
+
+                float angle = (float) Math.toRadians(_friendsOrbitAngle[i]);
+                float dx = (float) (radius * Math.cos(angle));
+                float dy = (float) (radius * Math.sin(angle));
+                Bitmap bitmap = _friendsThumbnailBitmaps[i];
+                canvas.drawBitmap(bitmap, cx + dx - bitmap.getWidth() / 2, cy + dy - bitmap.getHeight() / 2, null);
             }
         }
 
