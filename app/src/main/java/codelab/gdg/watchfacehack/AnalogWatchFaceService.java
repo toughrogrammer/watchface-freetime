@@ -126,7 +126,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             _circleOutlinePaint.setStrokeCap(Paint.Cap.ROUND);
             _circleOutlinePaint.setStyle(Paint.Style.STROKE);
 
-            _friendsThumbnailBitmaps = new Bitmap[5];
+            _friendsThumbnailBitmaps = new Bitmap[3];
             for ( int i = 0; i < _friendsThumbnailBitmaps.length; i++ ) {
                 Drawable drawable = resources.getDrawable(R.drawable.thumbnail_default);
                 _friendsThumbnailBitmaps[i] = ((BitmapDrawable) drawable).getBitmap();
@@ -232,11 +232,11 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         }
 
         void DrawFriends(Canvas canvas, float cx, float cy) {
-            for( int i = 0; i < 5; i++ ) {
-                _friendsOrbitAngle[i] += 0.6f * i;
+            for( int i = 0; i < _friendsThumbnailBitmaps.length; i++ ) {
+                _friendsOrbitAngle[i] += 0.6f * (i + 1);
             }
 
-            for (int i = 0; i < _friendsOrbitRadius.length; i++) {
+            for (int i = 0; i < _friendsThumbnailBitmaps.length; i++) {
                 canvas.save();
 
                 float radius = _friendsOrbitRadius[i];
