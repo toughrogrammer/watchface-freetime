@@ -74,6 +74,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         Bitmap mBackgroundBitmap;
         Bitmap mBackgroundScaledBitmap;
         Bitmap _bitmapUpperBackground;
+        Bitmap _bitmapUpperBackgroundScaled;
         Bitmap _bitmapHourPin;
         Bitmap _bitmapMinutePin;
 
@@ -251,7 +252,13 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
 
             DrawFriends(canvas, centerX, centerY);
 
-            canvas.drawBitmap(_bitmapUpperBackground , 0, 0, null);
+            if (_bitmapUpperBackgroundScaled == null
+                    || _bitmapUpperBackground.getWidth() != width
+                    || _bitmapUpperBackground.getHeight() != height) {
+                _bitmapUpperBackgroundScaled = Bitmap.createScaledBitmap(_bitmapUpperBackground,
+                        width, height, true /* filter */);
+            }
+            canvas.drawBitmap(_bitmapUpperBackgroundScaled , 0, 0, null);
             DrawClock(canvas, centerX, centerY);
         }
 
