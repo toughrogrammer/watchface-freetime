@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
@@ -19,7 +20,14 @@ import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import java.util.Random;
+
 public class AnalogWatchFaceService extends CanvasWatchFaceService {
+
+    private static final Typeface BOLD_TYPEFACE =
+            Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
+    private static final Typeface NORMAL_TYPEFACE =
+            Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
     @Override
     public Engine onCreateEngine() {
@@ -69,15 +77,9 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         Paint mSecondPaint;
         Paint _circleOutlinePaint;
 
-        static final float FRIENDS_ORBIT_RADIUS = 30.0f;
         Bitmap[] _friendsThumbnailBitmaps;
-        float _friendsOrbitAngle[] = new float[]{
-                0.0f,
-                0.0f,
-                0.0f,
-                0.0f,
-                0.0f
-        };
+        float[] _friendsOrbitAngle;
+        float[] _friendsOrbitRadius;
 
         long prev_milliseconds;
         float dt;
@@ -130,8 +132,28 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                 _friendsThumbnailBitmaps[i] = ((BitmapDrawable) drawable).getBitmap();
             }
 
+            _friendsOrbitAngle = new float[_friendsThumbnailBitmaps.length];
+
+            _friendsOrbitRadius = new float[_friendsThumbnailBitmaps.length];
+            Random random = new Random();
+            for( int i = 0; i < _friendsOrbitRadius.length; i ++ ) {
+                _friendsOrbitRadius[i] = random.nextFloat() * 100 + 30;
+            }
+
 
             mTime = new Time();
+        }
+
+        private Paint createTextPaint(int defaultInteractiveColor) {
+            return createTextPaint(defaultInteractiveColor, NORMAL_TYPEFACE);
+        }
+
+        private Paint createTextPaint(int defaultInteractiveColor, Typeface typeface) {
+            Paint paint = new Paint();
+            paint.setColor(defaultInteractiveColor);
+            paint.setTypeface(typeface);
+            paint.setAntiAlias(true);
+            return paint;
         }
 
         private void updateTimer() {
@@ -204,7 +226,6 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             /* 중심 좌표를 구합니다. */
             float centerX = width / 2f;
             float centerY = height / 2f;
-            Log.d("", "" + centerX + " " + centerY);
 
             DrawFriends(canvas, centerX, centerY);
             DrawClock(canvas, centerX, centerY);
@@ -215,8 +236,10 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                 _friendsOrbitAngle[i] += 0.6f * i;
             }
 
-            for (int i = 0; i < 5; i++) {
-                float radius = FRIENDS_ORBIT_RADIUS * i;
+            for (int i = 0; i < _friendsOrbitRadius.length; i++) {
+                canvas.save();
+
+                float radius = _friendsOrbitRadius[i];
                 canvas.drawCircle(cx, cy, radius, _circleOutlinePaint);
 
                 float angle = (float) Math.toRadians(_friendsOrbitAngle[i]);
@@ -224,6 +247,8 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                 float dy = (float) (radius * Math.sin(angle));
                 Bitmap bitmap = _friendsThumbnailBitmaps[i];
                 canvas.drawBitmap(bitmap, cx + dx - bitmap.getWidth() / 2, cy + dy - bitmap.getHeight() / 2, null);
+
+                canvas.restore();
             }
         }
 
