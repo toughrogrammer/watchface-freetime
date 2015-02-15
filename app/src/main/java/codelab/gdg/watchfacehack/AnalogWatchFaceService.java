@@ -165,14 +165,12 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
             super.onDraw(canvas, bounds);
-            /* 워치페이스를 그리는 곳으로 invalidate가 호출되면 자동으로 콜백이 불림(가장 중요) */
-            /* 시간을 갱신합니다. */
+
             mTime.setToNow();
 
             int width = bounds.width();
             int height = bounds.height();
 
-            /* 배경 이미지의 크기를 bound에 맞게 수정하고 배경으로 지정합니다. */
             if (mBackgroundScaledBitmap == null
                     || mBackgroundScaledBitmap.getWidth() != width
                     || mBackgroundScaledBitmap.getHeight() != height) {
@@ -186,8 +184,16 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             float centerY = height / 2f;
 
             DrawFriends(canvas, centerX, centerY);
+            DrawClock(canvas, centerX, centerY);
+        }
 
+        void DrawFriends(Canvas canvas, float cx, float cy) {
+            for (int i = 0; i < 5; i++) {
+                canvas.drawCircle(cx, cy, 30 * i, _circleOutlinePaint);
+            }
+        }
 
+        void DrawClock(Canvas canvas, float centerX, float centerY) {
             /* 각 침들의 각도와 길이를 계산합니다. */
             float secRot = mTime.second / 30f * (float) Math.PI;
             int minutes = mTime.minute;
@@ -215,12 +221,6 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             float hrY = (float) -Math.cos(hrRot) * hrLength;
             canvas.drawLine(centerX, centerY, centerX + hrX, centerY + hrY,
                     mHourPaint);
-        }
-
-        void DrawFriends(Canvas canvas, float cx, float cy) {
-            for( int i = 0; i < 5; i ++ ) {
-                canvas.drawCircle(cx, cy, 20 * i, _circleOutlinePaint);
-            }
         }
     }
 }
