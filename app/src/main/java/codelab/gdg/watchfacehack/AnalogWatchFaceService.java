@@ -86,6 +86,20 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         float[] _friendsOrbitRadius;
         float[] _friendsOrbitRotationSpeed;
 
+        final int[] RESOURCES_NUMBER = {
+                R.drawable.number_0,
+                R.drawable.number_1,
+                R.drawable.number_2,
+                R.drawable.number_3,
+                R.drawable.number_4,
+                R.drawable.number_5,
+                R.drawable.number_6,
+                R.drawable.number_7,
+                R.drawable.number_8,
+                R.drawable.number_9,
+        };
+        Bitmap[] _bitmapNumbers;
+
         long prev_milliseconds;
         float dt;
 
@@ -104,32 +118,37 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             _bitmapHourPin = LoadBitmapFromDrawable(R.drawable.pin_hour);
             _bitmapMinutePin = LoadBitmapFromDrawable(R.drawable.pin_minute);
 
+            _bitmapNumbers = new Bitmap[RESOURCES_NUMBER.length];
+            for (int i = 0; i < _bitmapNumbers.length; i++) {
+                _bitmapNumbers[i] = LoadBitmapFromDrawable(RESOURCES_NUMBER[i]);
+            }
+
             Random random = new Random();
 
             _friendsThumbnailBitmaps = new Bitmap[3];
             ArrayList<Integer> listForRandom = new ArrayList<Integer>();
-            for( int i = 0; i < _friendsThumbnailBitmaps.length; i ++ ) {
+            for (int i = 0; i < _friendsThumbnailBitmaps.length; i++) {
                 listForRandom.add(i);
             }
-            for ( int i = 0; i < _friendsThumbnailBitmaps.length; i++ ) {
+            for (int i = 0; i < _friendsThumbnailBitmaps.length; i++) {
                 int randomIndex = random.nextInt(listForRandom.size());
                 int n = listForRandom.get(randomIndex);
                 listForRandom.remove(randomIndex);
-                _friendsThumbnailBitmaps[i] = LoadBitmapFromDrawable( FRIENDS_THUMBNAIL_BITMAPS[n] );
+                _friendsThumbnailBitmaps[i] = LoadBitmapFromDrawable(FRIENDS_THUMBNAIL_BITMAPS[n]);
             }
 
             _friendsOrbitAngle = new float[_friendsThumbnailBitmaps.length];
-            for( int i = 0; i < _friendsOrbitAngle.length; i ++ ) {
+            for (int i = 0; i < _friendsOrbitAngle.length; i++) {
                 _friendsOrbitAngle[i] = random.nextFloat() * 360;
             }
 
             _friendsOrbitRadius = new float[_friendsThumbnailBitmaps.length];
-            for( int i = 0; i < _friendsOrbitRadius.length; i ++ ) {
+            for (int i = 0; i < _friendsOrbitRadius.length; i++) {
                 _friendsOrbitRadius[i] = random.nextFloat() * 100 + 30;
             }
 
             _friendsOrbitRotationSpeed = new float[_friendsThumbnailBitmaps.length];
-            for( int i = 0 ; i < _friendsOrbitRotationSpeed.length; i ++ ) {
+            for (int i = 0; i < _friendsOrbitRotationSpeed.length; i++) {
                 _friendsOrbitRotationSpeed[i] = random.nextFloat() * 0.3f + 0.1f;
             }
 
@@ -140,7 +159,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         private Bitmap LoadBitmapFromDrawable(int resId) {
             Resources resources = AnalogWatchFaceService.this.getResources();
             Drawable drwable = resources.getDrawable(resId);
-            return ((BitmapDrawable)drwable).getBitmap();
+            return ((BitmapDrawable) drwable).getBitmap();
         }
 
         private Paint createTextPaint(int defaultInteractiveColor) {
@@ -233,7 +252,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         }
 
         void DrawFriends(Canvas canvas, float cx, float cy) {
-            for( int i = 0; i < _friendsThumbnailBitmaps.length; i++ ) {
+            for (int i = 0; i < _friendsThumbnailBitmaps.length; i++) {
                 _friendsOrbitAngle[i] += _friendsOrbitRotationSpeed[i];
             }
 
@@ -277,6 +296,37 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             canvas.restore();
 
             canvas.restore();
+
+
+            float width = _bitmapNumbers[0].getWidth();
+            float sx = 110.0f;
+
+            int hour = mTime.hour;
+            int minute = mTime.minute;
+            String stringTime = "";
+            if( hour >= 10 ) {
+                stringTime += hour;
+            } else {
+                stringTime += "0" + hour;
+            }
+            if( minute >= 10 ) {
+                stringTime += minute;
+            } else {
+                stringTime += "0" + minute;
+            }
+            char[] chars = new char[stringTime.length()];
+            stringTime.getChars(0, stringTime.length(), chars, 0);
+
+            for( int i = 0; i < chars.length; i ++ ) {
+                int number = Integer.parseInt(chars[i] + "");
+                DrawNumber(canvas, number, sx, 28);
+                sx += width;
+            }
+        }
+
+        void DrawNumber(Canvas canvas, int number, float x, float y) {
+            Bitmap bitmap = _bitmapNumbers[number];
+            canvas.drawBitmap(bitmap, x, y, null);
         }
     }
 }
