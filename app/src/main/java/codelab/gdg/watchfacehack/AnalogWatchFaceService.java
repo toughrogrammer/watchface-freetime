@@ -73,6 +73,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
 
         Bitmap mBackgroundBitmap;
         Bitmap mBackgroundScaledBitmap;
+        Bitmap _bitmapUpperBackground;
         Bitmap _bitmapHourPin;
         Bitmap _bitmapMinutePin;
 
@@ -115,6 +116,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                     .build());
 
             mBackgroundBitmap = LoadBitmapFromDrawable(R.drawable.bg);
+            _bitmapUpperBackground = LoadBitmapFromDrawable(R.drawable.upper);
             _bitmapHourPin = LoadBitmapFromDrawable(R.drawable.pin_hour);
             _bitmapMinutePin = LoadBitmapFromDrawable(R.drawable.pin_minute);
 
@@ -248,6 +250,8 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             float centerY = height / 2f;
 
             DrawFriends(canvas, centerX, centerY);
+
+            canvas.drawBitmap(_bitmapUpperBackground , 0, 0, null);
             DrawClock(canvas, centerX, centerY);
         }
 
