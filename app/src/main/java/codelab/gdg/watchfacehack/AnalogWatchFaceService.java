@@ -20,6 +20,7 @@ import android.text.format.Time;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class AnalogWatchFaceService extends CanvasWatchFaceService {
@@ -75,8 +76,6 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         Bitmap _bitmapHourPin;
         Bitmap _bitmapMinutePin;
 
-        Paint _circleOutlinePaint;
-
         final int[] FRIENDS_THUMBNAIL_BITMAPS = {
                 R.drawable.thumbnail1,
                 R.drawable.thumbnail2,
@@ -85,6 +84,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         Bitmap[] _friendsThumbnailBitmaps;
         float[] _friendsOrbitAngle;
         float[] _friendsOrbitRadius;
+        float[] _friendsOrbitRotationSpeed;
 
         long prev_milliseconds;
         float dt;
@@ -104,18 +104,33 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             _bitmapHourPin = LoadBitmapFromDrawable(R.drawable.pin_hour);
             _bitmapMinutePin = LoadBitmapFromDrawable(R.drawable.pin_minute);
 
+            Random random = new Random();
+
             _friendsThumbnailBitmaps = new Bitmap[3];
+            ArrayList<Integer> listForRandom = new ArrayList<Integer>();
+            for( int i = 0; i < _friendsThumbnailBitmaps.length; i ++ ) {
+                listForRandom.add(i);
+            }
             for ( int i = 0; i < _friendsThumbnailBitmaps.length; i++ ) {
-                Random random = new Random();
-                _friendsThumbnailBitmaps[i] = LoadBitmapFromDrawable( FRIENDS_THUMBNAIL_BITMAPS[random.nextInt(3)] );
+                int randomIndex = random.nextInt(listForRandom.size());
+                int n = listForRandom.get(randomIndex);
+                listForRandom.remove(randomIndex);
+                _friendsThumbnailBitmaps[i] = LoadBitmapFromDrawable( FRIENDS_THUMBNAIL_BITMAPS[n] );
             }
 
             _friendsOrbitAngle = new float[_friendsThumbnailBitmaps.length];
+            for( int i = 0; i < _friendsOrbitAngle.length; i ++ ) {
+                _friendsOrbitAngle[i] = random.nextFloat() * 360;
+            }
 
             _friendsOrbitRadius = new float[_friendsThumbnailBitmaps.length];
-            Random random = new Random();
             for( int i = 0; i < _friendsOrbitRadius.length; i ++ ) {
                 _friendsOrbitRadius[i] = random.nextFloat() * 100 + 30;
+            }
+
+            _friendsOrbitRotationSpeed = new float[_friendsThumbnailBitmaps.length];
+            for( int i = 0 ; i < _friendsOrbitRotationSpeed.length; i ++ ) {
+                _friendsOrbitRotationSpeed[i] = random.nextFloat() * 0.3f + 0.1f;
             }
 
 
@@ -199,6 +214,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             int width = bounds.width();
             int height = bounds.height();
 
+
             if (mBackgroundScaledBitmap == null
                     || mBackgroundScaledBitmap.getWidth() != width
                     || mBackgroundScaledBitmap.getHeight() != height) {
@@ -206,6 +222,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                         width, height, true /* filter */);
             }
             canvas.drawBitmap(mBackgroundScaledBitmap, 0, 0, null);
+
 
             /* 중심 좌표를 구합니다. */
             float centerX = width / 2f;
@@ -217,7 +234,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
 
         void DrawFriends(Canvas canvas, float cx, float cy) {
             for( int i = 0; i < _friendsThumbnailBitmaps.length; i++ ) {
-                _friendsOrbitAngle[i] += 0.6f * (i + 1);
+                _friendsOrbitAngle[i] += _friendsOrbitRotationSpeed[i];
             }
 
             for (int i = 0; i < _friendsThumbnailBitmaps.length; i++) {
