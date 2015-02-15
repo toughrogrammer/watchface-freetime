@@ -72,11 +72,16 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
 
         Bitmap mBackgroundBitmap;
         Bitmap mBackgroundScaledBitmap;
-        Paint mHourPaint;
-        Paint mMinutePaint;
-        Paint mSecondPaint;
+        Bitmap _bitmapHourPin;
+        Bitmap _bitmapMinutePin;
+
         Paint _circleOutlinePaint;
 
+        final int[] FRIENDS_THUMBNAIL_BITMAPS = {
+                R.drawable.thumbnail1,
+                R.drawable.thumbnail2,
+                R.drawable.thumbnail3,
+        };
         Bitmap[] _friendsThumbnailBitmaps;
         float[] _friendsOrbitAngle;
         float[] _friendsOrbitRadius;
@@ -95,41 +100,14 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                     .setShowSystemUiTime(false)
                     .build());
 
-            /* 배경이미지를 로드합니다 */
-            Resources resources = AnalogWatchFaceService.this.getResources();
-            Drawable backgroundDrawable = resources.getDrawable(R.drawable.bg);
-            mBackgroundBitmap = ((BitmapDrawable) backgroundDrawable).getBitmap();
-
-            /* 그래픽 객체를 생성합니다 */
-            mHourPaint = new Paint();
-            mHourPaint.setARGB(255, 200, 200, 200);
-            mHourPaint.setStrokeWidth(5.f);
-            mHourPaint.setAntiAlias(true);
-            mHourPaint.setStrokeCap(Paint.Cap.ROUND);
-
-            mMinutePaint = new Paint();
-            mMinutePaint.setARGB(255, 200, 200, 200);
-            mMinutePaint.setStrokeWidth(3.f);
-            mMinutePaint.setAntiAlias(true);
-            mMinutePaint.setStrokeCap(Paint.Cap.ROUND);
-
-            mSecondPaint = new Paint();
-            mSecondPaint.setARGB(255, 255, 0, 0);
-            mSecondPaint.setStrokeWidth(2.f);
-            mSecondPaint.setAntiAlias(true);
-            mSecondPaint.setStrokeCap(Paint.Cap.ROUND);
-
-            _circleOutlinePaint = new Paint();
-            _circleOutlinePaint.setARGB(255, 255, 255, 255);
-            _circleOutlinePaint.setStrokeWidth(2.f);
-            _circleOutlinePaint.setAntiAlias(true);
-            _circleOutlinePaint.setStrokeCap(Paint.Cap.ROUND);
-            _circleOutlinePaint.setStyle(Paint.Style.STROKE);
+            mBackgroundBitmap = LoadBitmapFromDrawable(R.drawable.bg);
+            _bitmapHourPin = LoadBitmapFromDrawable(R.drawable.pin_hour);
+            _bitmapMinutePin = LoadBitmapFromDrawable(R.drawable.pin_minute);
 
             _friendsThumbnailBitmaps = new Bitmap[3];
             for ( int i = 0; i < _friendsThumbnailBitmaps.length; i++ ) {
-                Drawable drawable = resources.getDrawable(R.drawable.thumbnail_default);
-                _friendsThumbnailBitmaps[i] = ((BitmapDrawable) drawable).getBitmap();
+                Random random = new Random();
+                _friendsThumbnailBitmaps[i] = LoadBitmapFromDrawable( FRIENDS_THUMBNAIL_BITMAPS[random.nextInt(3)] );
             }
 
             _friendsOrbitAngle = new float[_friendsThumbnailBitmaps.length];
@@ -142,6 +120,12 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
 
 
             mTime = new Time();
+        }
+
+        private Bitmap LoadBitmapFromDrawable(int resId) {
+            Resources resources = AnalogWatchFaceService.this.getResources();
+            Drawable drwable = resources.getDrawable(resId);
+            return ((BitmapDrawable)drwable).getBitmap();
         }
 
         private Paint createTextPaint(int defaultInteractiveColor) {
@@ -240,7 +224,6 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                 canvas.save();
 
                 float radius = _friendsOrbitRadius[i];
-                canvas.drawCircle(cx, cy, radius, _circleOutlinePaint);
 
                 float angle = (float) Math.toRadians(_friendsOrbitAngle[i]);
                 float dx = (float) (radius * Math.cos(angle));
@@ -253,33 +236,30 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         }
 
         void DrawClock(Canvas canvas, float centerX, float centerY) {
-            /* 각 침들의 각도와 길이를 계산합니다. */
-            float secRot = mTime.second / 30f * (float) Math.PI;
-            int minutes = mTime.minute;
-            float minRot = minutes / 30f * (float) Math.PI;
-            float hrRot = ((mTime.hour + (minutes / 60f)) / 6f) * (float) Math.PI;
+            canvas.save();
 
-            float secLength = centerX - 20;
-            float minLength = centerX - 40;
-            float hrLength = centerX - 80;
+            float minuteRot = mTime.minute * 6 + 180;
+            float hourRot = (mTime.hour * 60 + mTime.minute) * 0.5f + 180;
 
-            /* Interactive 모드일 때에는, 초침을 그립니다. */
-            if (!isInAmbientMode()) {
-                float secX = (float) Math.sin(secRot) * secLength;
-                float secY = (float) -Math.cos(secRot) * secLength;
-                canvas.drawLine(centerX, centerY, centerX + secX, centerY +
-                        secY, mSecondPaint);
-            }
+            canvas.save();
+            canvas.translate(centerX, centerY);
+            canvas.rotate(hourRot);
+            canvas.drawBitmap(_bitmapHourPin,
+                    -_bitmapHourPin.getWidth() / 2,
+                    0,
+                    null);
+            canvas.restore();
 
-            // Draw the minute and hour hands.
-            float minX = (float) Math.sin(minRot) * minLength;
-            float minY = (float) -Math.cos(minRot) * minLength;
-            canvas.drawLine(centerX, centerY, centerX + minX, centerY + minY,
-                    mMinutePaint);
-            float hrX = (float) Math.sin(hrRot) * hrLength;
-            float hrY = (float) -Math.cos(hrRot) * hrLength;
-            canvas.drawLine(centerX, centerY, centerX + hrX, centerY + hrY,
-                    mHourPaint);
+            canvas.save();
+            canvas.translate(centerX, centerY);
+            canvas.rotate(minuteRot);
+            canvas.drawBitmap(_bitmapMinutePin,
+                    -_bitmapMinutePin.getWidth() / 2,
+                    0,
+                    null);
+            canvas.restore();
+
+            canvas.restore();
         }
     }
 }
